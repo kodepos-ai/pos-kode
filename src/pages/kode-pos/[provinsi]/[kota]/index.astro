@@ -17,8 +17,39 @@ const city = cities.find((item) => item.slug === kota);
 if (!city) return new Response("Kabupaten/Kota tidak ditemukan", { status: 404 });
 
 const districts = await getDistricts(Astro.locals, city.city_id);
+
+
 const title = `Kode Pos ${city.name}, ${province.name} — Kecamatan`;
-const description = `Daftar kecamatan dan kode pos ${city.name}, ${province.name}.`;
+
+const descriptions = [
+  `Daftar kode pos ${city.name}, ${province.name} lengkap berdasarkan kecamatan, kelurahan, dan desa. Temukan kode pos wilayah ${city.name} dengan mudah.`,
+
+  `Temukan kode pos ${city.name}, ${province.name} berdasarkan kecamatan hingga kelurahan dan desa. Informasi wilayah disusun secara lengkap dan mudah dicari.`,
+
+  `Informasi kode pos ${city.name}, ${province.name} mencakup daftar kecamatan, kelurahan, dan desa beserta kode pos masing-masing wilayah.`,
+
+  `Cari kode pos wilayah ${city.name}, ${province.name} dengan melihat daftar kecamatan serta kelurahan dan desa yang tersedia.`,
+
+  `Daftar kecamatan dan kode pos ${city.name}, ${province.name} untuk membantu menemukan kode pos kelurahan atau desa di setiap wilayah.`,
+
+  `Lihat daftar kode pos ${city.name}, ${province.name} lengkap dengan informasi kecamatan, kelurahan, dan desa untuk setiap wilayah.`,
+
+  `Panduan kode pos ${city.name}, ${province.name} berisi daftar kecamatan serta kelurahan dan desa beserta kode pos yang dapat Anda cari dengan mudah.`,
+
+  `Cari informasi kode pos di ${city.name}, ${province.name} mulai dari daftar kecamatan hingga kelurahan dan desa dalam satu halaman.`,
+
+  `Daftar kode pos wilayah ${city.name}, ${province.name} mencakup berbagai kecamatan, kelurahan, dan desa untuk memudahkan pencarian kode pos.`,
+
+  `Temukan informasi kode pos ${city.name}, ${province.name} secara praktis melalui daftar kecamatan, kelurahan, dan desa yang tersedia.`
+];
+
+const descriptionIndex =
+  [...city.name].reduce(
+    (total, char) => total + char.charCodeAt(0),
+    0
+  ) % descriptions.length;
+
+const description = descriptions[descriptionIndex];
 ---
 <MainLayout title={title} description={description} canonical={Astro.url.href}>
   <main class="kode-pos-page">
