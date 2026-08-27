@@ -7,7 +7,7 @@ const API_BASE =
 
 const q = (Astro.url.searchParams.get("q") || "").trim();
 
-let results = [];
+let results: any[] = [];
 let error = "";
 
 if (q.length >= 2) {
@@ -21,220 +21,165 @@ if (q.length >= 2) {
     }
 
     const json = await res.json();
-    const data = json.data || [];
 
-    /*
-     * API mengembalikan data sampai level kelurahan/desa.
-     * Untuk halaman Sedot WC kita hanya membutuhkan
-     * satu hasil untuk setiap kecamatan.
-     */
-    const districts = new Map();
-
-    for (const item of data) {
-      const key = `${item.prov_id}-${item.city_id}-${item.dis_id}`;
-
-      if (!districts.has(key)) {
-        districts.set(key, item);
-      }
-    }
-
-    results = [...districts.values()];
+    results = json.data || [];
   } catch (e) {
     console.error("SEDOT WC SEARCH ERROR:", e);
-    error = "Gagal mengambil data pencarian.";
+    error = "Gagal mengambil data wilayah.";
   }
 }
 
-const title = q
-  ? `Cari Sedot WC ${q}`
-  : "Sedot WC Indonesia";
-
-const description =
-  "Cari jasa sedot WC berdasarkan provinsi, kabupaten, kota, kecamatan, atau wilayah di Indonesia.";
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
 ---
 
 <MainLayout
-  title={title}
-  description={description}
-  canonical={Astro.url.href}
+  title={q ? `Sedot WC ${q}` : "Jasa Sedot WC"}
+  description={
+    q
+      ? `Jasa sedot WC ${q} dan sekitarnya. Layanan sedot septic tank dan limbah dengan pelayanan profesional.`
+      : "Jasa sedot WC profesional berdasarkan wilayah di Indonesia. Temukan layanan sedot WC di kota dan kecamatan Anda."
+  }
+  canonical={`${Astro.site ?? Astro.url.origin}/sedot-wc/`}
 >
   <main class="kode-pos-page">
     <div class="kode-pos-container">
 
-      <!-- Breadcrumb -->
-
-      <nav
-        class="breadcrumb"
-        aria-label="Breadcrumb"
-      >
+      <nav class="breadcrumb" aria-label="Breadcrumb">
         <a href="/">Beranda</a>
         <span>/</span>
         <span>Sedot WC</span>
       </nav>
 
+      <section class="page-heading">
+        <span class="eyebrow">Layanan Sedot WC</span>
 
-      <!-- Header -->
-
-      <header class="page-heading">
-
-        <span class="eyebrow">
-          Jasa Sedot WC
-        </span>
-
-        <h1>
-          Sedot WC Indonesia
-        </h1>
+        <h1>Cari Jasa Sedot WC</h1>
 
         <p>
-          Cari layanan sedot WC berdasarkan
-          provinsi, kabupaten, kota, kecamatan,
-          atau wilayah di sekitar Anda.
+          Temukan layanan sedot WC berdasarkan provinsi,
+          kabupaten atau kota, dan kecamatan.
         </p>
-
-      </header>
-
-
-      <!-- Search -->
-
-      <section class="content-section">
-
-        <form
-          method="get"
-          action="/sedot-wc/"
-          class="kodepos-search"
-          role="search"
-        >
-
-          <input
-            type="search"
-            name="q"
-            value={q}
-            placeholder="Cari kota atau kecamatan..."
-            autocomplete="off"
-            minlength="2"
-            required
-            aria-label="Cari wilayah sedot WC"
-          />
-
-          <button type="submit">
-            Cari
-          </button>
-
-        </form>
-
       </section>
 
+      <form
+        class="search-box"
+        method="get"
+        action="/sedot-wc/"
+      >
+        <input
+          type="search"
+          name="q"
+          value={q}
+          placeholder="Contoh: Kuningan, Bandung, Medan..."
+          autocomplete="off"
+          minlength="2"
+          required
+          aria-label="Cari wilayah sedot WC"
+        />
 
-      <!-- Results -->
+        <button type="submit">
+          Cari
+        </button>
+      </form>
 
       {
         q ? (
-
           <section class="content-section">
 
             <div class="section-heading">
-
               <div>
+                <span class="eyebrow">Wilayah</span>
 
-                <span class="eyebrow">
-                  Hasil Pencarian
-                </span>
+                <h2>Hasil pencarian</h2>
 
-                <h2>
-                  Wilayah Sedot WC
-                </h2>
-
+                <p class="search-info">
+                  Menampilkan wilayah yang sesuai dengan
+                  <strong>{q}</strong>
+                  {results.length > 0 &&
+                    ` · ${results.length} hasil`}
+                </p>
               </div>
-
-              {
-                results.length > 0 && (
-                  <span class="count">
-                    {results.length} wilayah
-                  </span>
-                )
-              }
-
             </div>
-
 
             {
               error ? (
-
                 <div class="empty-state">
-                  {error}
+                  <strong>Terjadi kesalahan</strong>
+                  <p>{error}</p>
                 </div>
-
               ) : results.length > 0 ? (
+                <div class="results">
 
-                <div class="list-grid">
+                  {results.map((item) => {
+                    const provinsi = slugify(item.prov_name);
+                    const kota = slugify(item.city_name);
+                    const kecamatan = slugify(item.dis_name);
 
-                  {
-                    results.map((item) => (
+                    const url =
+                      `/sedot-wc/${provinsi}/${kota}/${kecamatan}/`;
 
+                    return (
                       <a
-                        class="list-card"
-                        href={`/sedot-wc/${slugify(item.prov_name)}/${slugify(item.city_name)}/${slugify(item.dis_name)}/`}
+                        class="result-card"
+                        href={url}
                       >
+                        <div class="result-content">
 
-                        <span>
+                          <div class="result-info">
 
-                          <strong>
-                            Sedot WC {item.dis_name}
-                          </strong>
+                            <h3>
+                              Sedot WC {item.dis_name}
+                            </h3>
 
-                          <small>
-                            Kecamatan {item.dis_name},{" "}
-                            {item.city_name},{" "}
-                            {item.prov_name}
-                          </small>
+                            <p>
+                              Kecamatan {item.dis_name},
+                              {" "}
+                              {item.city_name},
+                              {" "}
+                              {item.prov_name}
+                            </p>
 
-                        </span>
+                          </div>
 
-                        <span class="arrow">
-                          →
-                        </span>
+                          <span class="result-arrow">
+                            →
+                          </span>
 
+                        </div>
                       </a>
-
-                    ))
-                  }
+                    );
+                  })}
 
                 </div>
-
               ) : (
-
                 <div class="empty-state">
+                  <strong>Wilayah tidak ditemukan</strong>
 
-                  Tidak ditemukan wilayah untuk
-                  pencarian <strong>{q}</strong>.
-
+                  <p>
+                    Belum ditemukan wilayah yang sesuai
+                    dengan pencarian "{q}".
+                  </p>
                 </div>
-
               )
             }
 
           </section>
-
         ) : (
+          <div class="empty-state">
+            <strong>Cari wilayah Anda</strong>
 
-          <section class="content-section">
-
-            <div class="empty-state">
-
-              <h2>
-                Cari Wilayah
-              </h2>
-
-              <p>
-                Masukkan nama kota atau kecamatan
-                untuk menemukan halaman layanan
-                sedot WC di wilayah tersebut.
-              </p>
-
-            </div>
-
-          </section>
-
+            <p>
+              Masukkan nama kota atau kecamatan untuk
+              menemukan halaman jasa sedot WC.
+            </p>
+          </div>
         )
       }
 
@@ -242,17 +187,133 @@ const description =
   </main>
 </MainLayout>
 
-
----
-
-<script>
-  function slugify(value) {
-    return String(value)
-      .toLowerCase()
-      .trim()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
+<style>
+  .search-box {
+    display: flex;
+    gap: 10px;
+    max-width: 760px;
+    padding: 8px;
+    margin-bottom: 38px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
   }
-</script>
+
+  .search-box input {
+    flex: 1;
+    min-width: 0;
+    height: 46px;
+    padding: 0 14px;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+  }
+
+  .search-box input::placeholder {
+    color: #98a2b3;
+  }
+
+  .search-box button {
+    height: 46px;
+    padding: 0 22px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .search-box button:hover {
+    opacity: .9;
+  }
+
+  .search-info {
+    margin: 5px 0 0;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .results {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .result-card {
+    display: block;
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    transition:
+      transform .16s ease,
+      border-color .16s ease,
+      box-shadow .16s ease;
+  }
+
+  .result-card:hover {
+    transform: translateY(-2px);
+    border-color: #c7d2fe;
+    box-shadow: 0 12px 34px rgba(16, 24, 40, .08);
+  }
+
+  .result-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .result-info {
+    min-width: 0;
+  }
+
+  .result-info h3 {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.4;
+  }
+
+  .result-info p {
+    margin: 5px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .result-arrow {
+    flex-shrink: 0;
+    color: var(--muted);
+    font-size: 20px;
+  }
+
+  .empty-state p {
+    margin: 5px 0 0;
+  }
+
+  @media (max-width: 700px) {
+    .results {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .search-box {
+      padding: 6px;
+    }
+
+    .search-box button {
+      padding: 0 16px;
+    }
+
+    .result-content {
+      align-items: flex-start;
+    }
+  }
+</style>
