@@ -12,11 +12,7 @@ export default defineConfig({
     'https://pos-kode.pages.dev',
 
   integrations: [
-    sitemap({
-      customSitemaps: [
-        'https://pos-kode.pages.dev/wilayah-sitemap.xml'
-      ]
-    })
+    sitemap()
   ],
 
   markdown: {
