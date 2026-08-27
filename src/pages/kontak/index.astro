@@ -17,6 +17,7 @@ const whatsappNumber = "6281234567890";
 >
 
   <main class="kode-pos-page">
+<div class="container-kontak">
     <div class="kode-pos-container">
 
       <nav class="breadcrumb" aria-label="Breadcrumb">
@@ -157,12 +158,39 @@ const whatsappNumber = "6281234567890";
       </section>
 
     </div>
+</div>
   </main>
 
 </MainLayout>
 
 
 <style>
+.container-kontak {
+  width: min(900px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 38px 0 72px;
+}
+
+.contact-card {
+  width: 100%;
+  padding: 30px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+@media (max-width: 700px) {
+  .container-kontak {
+    width: min(100% - 24px, 900px);
+    padding: 26px 0 50px;
+  }
+
+  .contact-card {
+    padding: 20px;
+  }
+}
+
   .contact-card {
     max-width: 900px;
     padding: 30px;
