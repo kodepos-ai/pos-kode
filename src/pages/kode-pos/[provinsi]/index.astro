@@ -1,62 +1,240 @@
 ---
 import MainLayout from "../../../layouts/MainLayout.astro";
 import "../../../styles/kode-pos.css";
-import { getProvinces, getCities } from "../../../lib/kode-pos/config";
+import {
+  getProvinces,
+  getCities,
+  kodePosUrl,
+} from "../../../lib/kode-pos/config";
 
 export const prerender = false;
 
 const { provinsi } = Astro.params;
-if (!provinsi) return Astro.redirect("/kode-pos/");
 
 const provinces = await getProvinces();
-const province = provinces.find((item) => item.slug === provinsi);
+
+const province = provinces.find(
+  (item) => item.slug === provinsi
+);
 
 if (!province) {
-  return new Response("Provinsi tidak ditemukan", { status: 404 });
+  return new Response(
+    `Provinsi tidak ditemukan`,
+    {
+      status: 404,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+      },
+    }
+  );
 }
 
-const cities = await getCities(Astro.locals, province.prov_id);
-const title = `Kode Pos ${province.name} — Kabupaten & Kota`;
-const description = `Daftar kode pos ${province.name}, lengkap dengan kabupaten dan kota.`;
+const cities = await getCities(
+  Astro.locals,
+  province.prov_id
+);
+
+/*
+ * Deskripsi SEO khusus setiap provinsi.
+ * Tidak random sehingga hasilnya selalu sama
+ * ketika halaman di-refresh.
+ */
+const provinceDescriptions: Record<string, string> = {
+  "aceh":
+    "Temukan kode pos Aceh berdasarkan kabupaten, kota, kecamatan, hingga kelurahan dan desa. Lihat daftar wilayah untuk menemukan kode pos yang sesuai.",
+
+  "sumatera-utara":
+    "Cari kode pos Sumatera Utara mulai dari Medan dan berbagai kabupaten serta kota lainnya hingga kecamatan dan kelurahan atau desa.",
+
+  "sumatera-barat":
+    "Lihat daftar kode pos Sumatera Barat berdasarkan kabupaten, kota, kecamatan, serta kelurahan dan desa di berbagai wilayah.",
+
+  "riau":
+    "Temukan kode pos Riau berdasarkan Pekanbaru dan kabupaten atau kota lainnya hingga kecamatan serta kelurahan atau desa.",
+
+  "jambi":
+    "Cari kode pos Jambi berdasarkan kabupaten, kota, kecamatan, dan kelurahan atau desa untuk menemukan wilayah alamat dengan lebih mudah.",
+
+  "sumatera-selatan":
+    "Temukan kode pos Sumatera Selatan berdasarkan Palembang dan berbagai kabupaten serta kota hingga tingkat kecamatan dan kelurahan atau desa.",
+
+  "bengkulu":
+    "Lihat daftar kode pos Bengkulu berdasarkan kabupaten, kota, kecamatan, serta kelurahan atau desa yang tersedia di setiap wilayah.",
+
+  "lampung":
+    "Cari kode pos Lampung dengan memilih kabupaten atau kota, kemudian kecamatan hingga kelurahan atau desa sesuai wilayah yang dicari.",
+
+  "kepulauan-bangka-belitung":
+    "Temukan kode pos Kepulauan Bangka Belitung berdasarkan kabupaten, kota, kecamatan, dan kelurahan atau desa di seluruh wilayah.",
+
+  "kepulauan-riau":
+    "Cari kode pos Kepulauan Riau untuk Batam, Tanjungpinang, Bintan, Karimun, Natuna, dan wilayah lainnya berdasarkan kecamatan dan kelurahan atau desa.",
+
+  "daerah-khusus-ibukota-jakarta":
+    "Temukan kode pos DKI Jakarta berdasarkan wilayah administrasi, kecamatan, dan kelurahan di Jakarta.",
+
+  "jawa-barat":
+    "Cari kode pos Jawa Barat untuk Bandung, Bekasi, Bogor, Depok, Cirebon, dan wilayah kabupaten atau kota lainnya hingga tingkat kecamatan dan desa.",
+
+  "jawa-tengah":
+    "Temukan kode pos Jawa Tengah berdasarkan kabupaten dan kota seperti Semarang, Surakarta, Tegal, Magelang, serta berbagai wilayah lainnya.",
+
+  "daerah-istimewa-yogyakarta":
+    "Lihat daftar kode pos Daerah Istimewa Yogyakarta berdasarkan kabupaten, kota, kecamatan, hingga kelurahan dan desa.",
+
+  "jawa-timur":
+    "Cari kode pos Jawa Timur untuk Surabaya, Malang, Kediri, Sidoarjo, Jember, dan berbagai kabupaten atau kota lainnya.",
+
+  "banten":
+    "Temukan kode pos Banten berdasarkan Tangerang, Serang, Cilegon, Lebak, Pandeglang, dan wilayah kabupaten atau kota lainnya.",
+
+  "bali":
+    "Cari kode pos Bali berdasarkan kabupaten dan kota, kecamatan, serta desa dan kelurahan yang tersebar di seluruh wilayah Bali.",
+
+  "nusa-tenggara-barat":
+    "Temukan kode pos Nusa Tenggara Barat berdasarkan wilayah Lombok, Sumbawa, Bima, Mataram, serta kabupaten dan kota lainnya.",
+
+  "nusa-tenggara-timur":
+    "Lihat daftar kode pos Nusa Tenggara Timur berdasarkan kabupaten, kota, kecamatan, serta kelurahan dan desa di berbagai wilayah.",
+
+  "kalimantan-barat":
+    "Cari kode pos Kalimantan Barat berdasarkan Pontianak dan berbagai kabupaten, kota, kecamatan, serta kelurahan atau desa.",
+
+  "kalimantan-tengah":
+    "Temukan kode pos Kalimantan Tengah berdasarkan kabupaten dan kota hingga kecamatan serta kelurahan atau desa di setiap wilayah.",
+
+  "kalimantan-selatan":
+    "Cari kode pos Kalimantan Selatan untuk Banjarmasin, Banjarbaru, dan berbagai kabupaten lainnya berdasarkan kecamatan dan kelurahan atau desa.",
+
+  "kalimantan-timur":
+    "Temukan kode pos Kalimantan Timur berdasarkan Samarinda, Balikpapan, Bontang, Kutai, Berau, dan berbagai wilayah lainnya.",
+
+  "kalimantan-utara":
+    "Lihat daftar kode pos Kalimantan Utara berdasarkan kabupaten, kota, kecamatan, serta kelurahan atau desa di seluruh wilayah.",
+
+  "sulawesi-utara":
+    "Cari kode pos Sulawesi Utara untuk Manado, Bitung, Tomohon, Minahasa, dan berbagai kabupaten atau kota lainnya.",
+
+  "sulawesi-tengah":
+    "Temukan kode pos Sulawesi Tengah berdasarkan kabupaten, kota, kecamatan, hingga kelurahan atau desa di seluruh wilayah.",
+
+  "sulawesi-selatan":
+    "Cari kode pos Sulawesi Selatan untuk Makassar, Gowa, Bone, Maros, Parepare, dan berbagai wilayah lainnya.",
+
+  "sulawesi-tenggara":
+    "Lihat kode pos Sulawesi Tenggara berdasarkan Kendari, Baubau, Konawe, Kolaka, serta kabupaten dan kecamatan lainnya.",
+
+  "gorontalo":
+    "Temukan kode pos Gorontalo berdasarkan kabupaten dan kota, kecamatan, serta kelurahan dan desa di seluruh wilayah.",
+
+  "sulawesi-barat":
+    "Cari kode pos Sulawesi Barat berdasarkan kabupaten, kecamatan, hingga kelurahan atau desa di setiap wilayah.",
+
+  "maluku":
+    "Temukan kode pos Maluku berdasarkan Ambon dan berbagai kabupaten serta kecamatan yang tersebar di wilayah kepulauan Maluku.",
+
+  "maluku-utara":
+    "Cari kode pos Maluku Utara berdasarkan Ternate, Tidore, Halmahera, serta berbagai kabupaten dan kecamatan lainnya.",
+
+  "papua":
+    "Lihat daftar kode pos Papua berdasarkan kabupaten, kecamatan, serta kelurahan atau desa di berbagai wilayah Papua.",
+
+  "papua-barat":
+    "Temukan kode pos Papua Barat berdasarkan kabupaten, kecamatan, dan kelurahan atau desa untuk membantu pencarian alamat."
+};
+
+const description =
+  provinceDescriptions[province.slug] ||
+  `Informasi kode pos ${province.name} berdasarkan kabupaten, kota, kecamatan, dan kelurahan atau desa.`;
+
+const title = `Kode Pos ${province.name}`;
 ---
-<MainLayout title={title} description={description} canonical={Astro.url.href}>
+
+<MainLayout
+  title={title}
+  description={description}
+  canonical={Astro.url.href}
+>
   <main class="kode-pos-page">
     <div class="kode-pos-container">
+
       <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="/kode-pos/">Kode Pos</a><span>/</span><span>{province.name}</span>
+        <a href="/">Beranda</a>
+        <span>/</span>
+        <a href="/kode-pos/">Kode Pos</a>
+        <span>/</span>
+        <span>{province.name}</span>
       </nav>
 
       <header class="page-heading">
-        <span class="eyebrow">Provinsi</span>
+        <span class="eyebrow">
+          Kode Pos {province.name}
+        </span>
+
         <h1>Kode Pos {province.name}</h1>
-        <p>Daftar kabupaten dan kota di {province.name} beserta tautan menuju kecamatan.</p>
+
+        <p>
+          {description}
+        </p>
       </header>
 
-      <section class="content-section">
+      <section
+        class="content-section"
+        aria-labelledby="city-list"
+      >
+
         <div class="section-heading">
           <div>
-            <span class="eyebrow">Kabupaten & Kota</span>
-            <h2>Wilayah di {province.name}</h2>
+            <h2 id="city-list">
+              Kabupaten dan Kota
+            </h2>
           </div>
-          <span class="count">{cities.length} wilayah</span>
+
+          <span class="count">
+            {cities.length} wilayah
+          </span>
         </div>
 
         {cities.length > 0 ? (
-          <div class="list-grid">
-            {cities.map((city) => (
-              <a class="list-card" href={`/kode-pos/${province.slug}/${city.slug}/`}>
-                <span>
-                  <strong>{city.name}</strong>
-                  <small>Lihat kecamatan</small>
+          <div class="region-grid">
+            {cities.map((city, index) => (
+              <a
+                class="region-card"
+                href={kodePosUrl(
+                  province.slug,
+                  city.slug
+                )}
+              >
+                <span class="region-number">
+                  {String(index + 1).padStart(2, "0")}
                 </span>
-                <span class="arrow">→</span>
+
+                <span class="region-info">
+                  <strong>{city.name}</strong>
+
+                  <small>
+                    Lihat kecamatan dan kode pos
+                  </small>
+                </span>
+
+                <span
+                  class="arrow"
+                  aria-hidden="true"
+                >
+                  →
+                </span>
               </a>
             ))}
           </div>
         ) : (
-          <div class="empty-state">Data kabupaten/kota tidak tersedia.</div>
+          <div class="empty-state">
+            Data kabupaten dan kota untuk {province.name}
+            belum tersedia.
+          </div>
         )}
+
       </section>
+
     </div>
   </main>
 </MainLayout>
