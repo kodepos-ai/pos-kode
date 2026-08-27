@@ -1,0 +1,65 @@
+---
+import MainLayout from "../../../../layouts/MainLayout.astro";
+import "../../../../styles/kode-pos.css";
+import { getProvinces, getCities, getDistricts } from "../../../../lib/kode-pos/config";
+
+export const prerender = false;
+
+const { provinsi, kota } = Astro.params;
+const provinces = await getProvinces();
+const province = provinces.find((item) => item.slug === provinsi);
+
+if (!province) return new Response("Provinsi tidak ditemukan", { status: 404 });
+
+const cities = await getCities(Astro.locals, province.prov_id);
+const city = cities.find((item) => item.slug === kota);
+
+if (!city) return new Response("Kabupaten/Kota tidak ditemukan", { status: 404 });
+
+const districts = await getDistricts(Astro.locals, city.city_id);
+const title = `Kode Pos ${city.name}, ${province.name} — Kecamatan`;
+const description = `Daftar kecamatan dan kode pos ${city.name}, ${province.name}.`;
+---
+<MainLayout title={title} description={description} canonical={Astro.url.href}>
+  <main class="kode-pos-page">
+    <div class="kode-pos-container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/kode-pos/">Kode Pos</a><span>/</span>
+        <a href={`/kode-pos/${province.slug}/`}>{province.name}</a><span>/</span>
+        <span>{city.name}</span>
+      </nav>
+
+      <header class="page-heading">
+        <span class="eyebrow">Kabupaten / Kota</span>
+        <h1>Kode Pos {city.name}</h1>
+        <p>Daftar kecamatan dan kode pos di {city.name}, {province.name}.</p>
+      </header>
+
+      <section class="content-section">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">Kecamatan</span>
+            <h2>Daftar Kecamatan</h2>
+          </div>
+          <span class="count">{districts.length} kecamatan</span>
+        </div>
+
+        {districts.length > 0 ? (
+          <div class="list-grid">
+            {districts.map((district) => (
+              <a class="list-card" href={`/kode-pos/${province.slug}/${city.slug}/${district.slug}/`}>
+                <span>
+                  <strong>{district.name}</strong>
+                  <small>Lihat kelurahan & kode pos</small>
+                </span>
+                <span class="arrow">→</span>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <div class="empty-state">Data kecamatan tidak tersedia.</div>
+        )}
+      </section>
+    </div>
+  </main>
+</MainLayout>

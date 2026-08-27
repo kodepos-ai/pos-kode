@@ -1,0 +1,62 @@
+---
+import MainLayout from "../../../layouts/MainLayout.astro";
+import "../../../styles/kode-pos.css";
+import { getProvinces, getCities } from "../../../lib/kode-pos/config";
+
+export const prerender = false;
+
+const { provinsi } = Astro.params;
+if (!provinsi) return Astro.redirect("/kode-pos/");
+
+const provinces = await getProvinces();
+const province = provinces.find((item) => item.slug === provinsi);
+
+if (!province) {
+  return new Response("Provinsi tidak ditemukan", { status: 404 });
+}
+
+const cities = await getCities(Astro.locals, province.prov_id);
+const title = `Kode Pos ${province.name} — Kabupaten & Kota`;
+const description = `Daftar kode pos ${province.name}, lengkap dengan kabupaten dan kota.`;
+---
+<MainLayout title={title} description={description} canonical={Astro.url.href}>
+  <main class="kode-pos-page">
+    <div class="kode-pos-container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/kode-pos/">Kode Pos</a><span>/</span><span>{province.name}</span>
+      </nav>
+
+      <header class="page-heading">
+        <span class="eyebrow">Provinsi</span>
+        <h1>Kode Pos {province.name}</h1>
+        <p>Daftar kabupaten dan kota di {province.name} beserta tautan menuju kecamatan.</p>
+      </header>
+
+      <section class="content-section">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">Kabupaten & Kota</span>
+            <h2>Wilayah di {province.name}</h2>
+          </div>
+          <span class="count">{cities.length} wilayah</span>
+        </div>
+
+        {cities.length > 0 ? (
+          <div class="list-grid">
+            {cities.map((city) => (
+              <a class="list-card" href={`/kode-pos/${province.slug}/${city.slug}/`}>
+                <span>
+                  <strong>{city.name}</strong>
+                  <small>Lihat kecamatan</small>
+                </span>
+                <span class="arrow">→</span>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <div class="empty-state">Data kabupaten/kota tidak tersedia.</div>
+        )}
+      </section>
+    </div>
+  </main>
+</MainLayout>

@@ -1,0 +1,87 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+  canonical?: string;
+  ogType?: "website" | "article";
+}
+const {
+  title,
+  description = "",
+  canonical,
+  ogType = "website"
+} = Astro.props;
+
+const canonicalUrl = canonical || Astro.url.href;
+---
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content={description} />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href={canonicalUrl} />
+
+  <meta property="og:type" content={ogType} />
+  <meta property="og:locale" content="id_ID" />
+  <meta property="og:site_name" content="Kode Pos Indonesia" />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:url" content={canonicalUrl} />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+
+  <title>{title}</title>
+</head>
+<body>
+<header class="site-header">
+  <div class="site-header-inner">
+
+    <a
+      class="brand"
+      href="/kode-pos/"
+      aria-label="Kode Pos Indonesia"
+    >
+      <span class="brand-mark">KP</span>
+      <span>Kode Pos</span>
+    </a>
+
+    <form
+      class="header-search"
+      method="get"
+      action="/kode-pos/cari/"
+    >
+      <input
+        type="search"
+        name="q"
+        placeholder="Cari kode pos..."
+        aria-label="Cari kode pos"
+        autocomplete="off"
+      />
+
+      <button type="submit" aria-label="Cari">
+        Cari
+      </button>
+    </form>
+
+    <nav class="site-nav" aria-label="Navigasi utama">
+      <a href="/kode-pos/">Kode Pos</a>
+      <a href="/blog/">Blog</a>
+    </nav>
+
+  </div>
+</header>
+
+  <slot />
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <span>© {new Date().getFullYear()} Kode Pos Indonesia</span>
+      <a href="/kode-pos/">Direktori Kode Pos</a>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,83 @@
+---
+import MainLayout from "../../../../../layouts/MainLayout.astro";
+import "../../../../../styles/kode-pos.css";
+import {
+  getProvinces,
+  getCities,
+  getDistricts,
+  getPostalCodes,
+} from "../../../../../lib/kode-pos/config";
+
+export const prerender = false;
+
+const { provinsi, kota, kecamatan } = Astro.params;
+const provinces = await getProvinces();
+const province = provinces.find((item) => item.slug === provinsi);
+
+if (!province) return new Response("Provinsi tidak ditemukan", { status: 404 });
+
+const cities = await getCities(Astro.locals, province.prov_id);
+const city = cities.find((item) => item.slug === kota);
+
+if (!city) return new Response("Kabupaten / kota tidak ditemukan", { status: 404 });
+
+const districts = await getDistricts(Astro.locals, city.city_id);
+const district = districts.find((item) => item.slug === kecamatan);
+
+if (!district) return new Response("Kecamatan tidak ditemukan", { status: 404 });
+
+const postalCodes = await getPostalCodes(Astro.locals, district.dis_id);
+const title = `Kode Pos ${district.name}, ${city.name}, ${province.name}`;
+const description = `Daftar kode pos ${district.name}, ${city.name}, ${province.name}, lengkap dengan kelurahan dan desa.`;
+---
+<MainLayout title={title} description={description} canonical={Astro.url.href}>
+  <main class="kode-pos-page">
+    <div class="kode-pos-container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/kode-pos/">Kode Pos</a><span>/</span>
+        <a href={`/kode-pos/${province.slug}/`}>{province.name}</a><span>/</span>
+        <a href={`/kode-pos/${province.slug}/${city.slug}/`}>{city.name}</a><span>/</span>
+        <span>{district.name}</span>
+      </nav>
+
+      <header class="page-heading">
+        <span class="eyebrow">Kecamatan</span>
+        <h1>Kode Pos {district.name}</h1>
+        <p>Daftar kode pos {district.name}, {city.name}, {province.name}.</p>
+      </header>
+
+      <section class="content-section">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">Kelurahan / Desa</span>
+            <h2>Daftar Kode Pos</h2>
+          </div>
+          <span class="count">{postalCodes.length} data</span>
+        </div>
+
+        {postalCodes.length > 0 ? (
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Kelurahan / Desa</th>
+                  <th scope="col">Kode Pos</th>
+                </tr>
+              </thead>
+              <tbody>
+                {postalCodes.map((item) => (
+                  <tr>
+                    <td>{item.name}</td>
+                    <td><span class="postal-code">{item.postal_code}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div class="empty-state">Data kode pos tidak tersedia.</div>
+        )}
+      </section>
+    </div>
+  </main>
+</MainLayout>

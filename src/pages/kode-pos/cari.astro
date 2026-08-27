@@ -1,0 +1,294 @@
+---
+import MainLayout from "../../layouts/MainLayout.astro";
+import "../../styles/kode-pos.css";
+
+const API_BASE =
+  "https://api-kodepos.linkq.workers.dev/api/kode-pos";
+
+const q = (Astro.url.searchParams.get("q") || "").trim();
+
+let results: any[] = [];
+let error = "";
+
+if (q.length >= 2) {
+  try {
+    const res = await fetch(
+      `${API_BASE}/search?q=${encodeURIComponent(q)}`
+    );
+
+    if (!res.ok) {
+      throw new Error(`API HTTP ${res.status}`);
+    }
+
+    const json = await res.json();
+
+    results = json.data || [];
+  } catch (e) {
+    console.error("SEARCH ERROR:", e);
+    error = "Gagal mengambil data pencarian.";
+  }
+}
+---
+
+<MainLayout
+  title={q ? `Cari Kode Pos: ${q}` : "Cari Kode Pos"}
+  description="Cari kode pos berdasarkan provinsi, kabupaten atau kota, kecamatan, kelurahan atau desa."
+  canonical={`${Astro.site ?? Astro.url.origin}/kode-pos/cari/`}
+>
+
+  <main class="kode-pos-page">
+    <div class="kode-pos-container">
+
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/kode-pos/">Kode Pos</a>
+        <span>/</span>
+        <span>Pencarian</span>
+      </nav>
+
+      <section class="page-heading">
+        <span class="eyebrow">Pencarian</span>
+
+        <h1>Cari Kode Pos</h1>
+
+        <p>
+          Temukan kode pos berdasarkan nama provinsi,
+          kabupaten atau kota, kecamatan, kelurahan/desa,
+          atau nomor kode pos.
+        </p>
+      </section>
+
+      <form
+        class="search-box"
+        method="get"
+        action="/kode-pos/cari/"
+      >
+        <input
+          type="search"
+          name="q"
+          value={q}
+          placeholder="Contoh: Aceh, Bandung, 40123..."
+          autocomplete="off"
+          minlength="2"
+          required
+          aria-label="Cari kode pos"
+        />
+
+        <button type="submit">
+          Cari
+        </button>
+      </form>
+
+      {
+        q && (
+          <section class="content-section">
+
+            <div class="section-heading">
+              <div>
+                <h2>Hasil pencarian</h2>
+
+                <p class="search-info">
+                  Menampilkan hasil untuk
+                  <strong>{q}</strong>
+                  {results.length > 0 &&
+                    ` · ${results.length} hasil`}
+                </p>
+              </div>
+            </div>
+
+            {
+              error ? (
+                <div class="empty-state">
+                  <strong>Terjadi kesalahan</strong>
+                  <p>{error}</p>
+                </div>
+              ) : results.length > 0 ? (
+                <div class="results">
+                  {results.map((item) => (
+                    <article class="result-card">
+
+                      <div class="result-content">
+
+                        <div class="result-info">
+                          <h3>
+                            {item.subdis_name}
+                          </h3>
+
+                          <p>
+                            {item.dis_name},{" "}
+                            {item.city_name},{" "}
+                            {item.prov_name}
+                          </p>
+                        </div>
+
+                        <span class="postal-code">
+                          {item.postal_code}
+                        </span>
+
+                      </div>
+
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div class="empty-state">
+                  <strong>Data tidak ditemukan</strong>
+
+                  <p>
+                    Tidak ada wilayah atau kode pos
+                    yang cocok dengan pencarian
+                    "{q}".
+                  </p>
+                </div>
+              )
+            }
+
+          </section>
+        )
+      }
+
+      {
+        !q && (
+          <div class="empty-state">
+            <strong>Mulai pencarian</strong>
+
+            <p>
+              Masukkan nama wilayah atau kode pos
+              pada kolom pencarian di atas.
+            </p>
+          </div>
+        )
+      }
+
+    </div>
+  </main>
+
+</MainLayout>
+
+<style>
+  .search-box {
+    display: flex;
+    gap: 10px;
+    max-width: 760px;
+    padding: 8px;
+    margin-bottom: 38px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+  }
+
+  .search-box input {
+    flex: 1;
+    min-width: 0;
+    height: 46px;
+    padding: 0 14px;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+  }
+
+  .search-box input::placeholder {
+    color: #98a2b3;
+  }
+
+  .search-box input:focus {
+    outline: none;
+  }
+
+  .search-box button {
+    height: 46px;
+    padding: 0 22px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .search-box button:hover {
+    opacity: .9;
+  }
+
+  .search-info {
+    margin: 5px 0 0;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .results {
+    display: grid;
+    gap: 12px;
+  }
+
+  .result-card {
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    transition:
+      transform .16s ease,
+      border-color .16s ease,
+      box-shadow .16s ease;
+  }
+
+  .result-card:hover {
+    transform: translateY(-1px);
+    border-color: #c7d2fe;
+    box-shadow: 0 12px 34px rgba(16, 24, 40, .08);
+  }
+
+  .result-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .result-info {
+    min-width: 0;
+  }
+
+  .result-info h3 {
+    margin: 0;
+    font-size: 17px;
+    line-height: 1.4;
+  }
+
+  .result-info p {
+    margin: 5px 0 0;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .postal-code {
+    flex-shrink: 0;
+  }
+
+  .empty-state p {
+    margin: 5px 0 0;
+  }
+
+  @media (max-width: 600px) {
+    .search-box {
+      padding: 6px;
+    }
+
+    .search-box button {
+      padding: 0 16px;
+    }
+
+    .result-content {
+      align-items: flex-start;
+    }
+
+    .result-content {
+      flex-direction: column;
+      gap: 10px;
+    }
+  }
+</style>
