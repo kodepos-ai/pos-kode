@@ -72,34 +72,134 @@ const postalCodes = await getPostalCodes(
 );
 
 /* =========================
-   SEO
-========================= */
-
-const title =
-  `Sedot WC ${district.name}, ${city.name}, ${province.name}`;
-
-const description =
-  `Jasa sedot WC profesional di Kecamatan ${district.name}, ${city.name}, ${province.name}. Melayani sedot WC, septic tank penuh, WC mampet, dan kebutuhan penyedotan limbah di wilayah sekitar.`;
-
-/* =========================
-   DATA WILAYAH
+   DATA SEO LOKAL
 ========================= */
 
 const location =
   `Kecamatan ${district.name}, ${city.name}, ${province.name}`;
+
+const areaNames = postalCodes
+  .slice(0, 6)
+  .map((item) => item.name);
+
+const areaSummary =
+  areaNames.length > 0
+    ? areaNames.join(", ")
+    : `wilayah Kecamatan ${district.name}`;
+
+/*
+ * Description dibuat deterministik.
+ * Tidak menggunakan random sehingga tidak berubah
+ * ketika halaman di-refresh.
+ */
+
+const descriptionPatterns = [
+  `Informasi jasa sedot WC di ${district.name}, ${city.name}, ${province.name}. Melayani kebutuhan septic tank, WC mampet, dan penyedotan limbah di wilayah sekitar.`,
+  `Temukan layanan sedot WC di ${district.name}, ${city.name}, ${province.name}, termasuk area kelurahan dan desa di sekitarnya.`,
+  `Jasa sedot WC untuk wilayah ${district.name}, ${city.name}, ${province.name}. Lihat area layanan, kelurahan, dan desa yang berada di wilayah ini.`,
+  `Layanan sedot WC ${district.name}, ${city.name}, ${province.name} untuk kebutuhan septic tank penuh, WC mampet, dan penyedotan limbah.`,
+  `Cari informasi sedot WC di Kecamatan ${district.name}, ${city.name}, ${province.name}, beserta wilayah kelurahan dan desa yang termasuk area layanan.`,
+  `Jasa sedot WC di ${district.name}, ${city.name}, ${province.name}. Informasi area layanan mencakup kelurahan, desa, dan wilayah sekitar kecamatan.`,
+  `Informasi layanan sedot WC Kecamatan ${district.name}, ${city.name}, ${province.name}, mulai dari septic tank hingga penyedotan limbah rumah tangga.`,
+  `Layanan sedot WC untuk ${district.name}, ${city.name}, ${province.name}. Temukan informasi wilayah dan kelurahan atau desa yang berada di area layanan.`,
+  `Sedot WC ${district.name}, ${city.name}, ${province.name} dengan informasi area layanan berdasarkan wilayah kelurahan dan desa di kecamatan.`,
+  `Panduan dan informasi jasa sedot WC di ${district.name}, ${city.name}, ${province.name}, termasuk area kelurahan, desa, dan wilayah sekitarnya.`,
+];
+
+/*
+ * Hash sederhana agar pola yang dipilih selalu sama
+ * untuk nama kecamatan yang sama.
+ */
+
+function stableHash(value: string) {
+  let hash = 0;
+
+  for (let i = 0; i < value.length; i++) {
+    hash =
+      (hash << 5) -
+      hash +
+      value.charCodeAt(i);
+
+    hash |= 0;
+  }
+
+  return Math.abs(hash);
+}
+
+const descriptionIndex =
+  stableHash(
+    `${province.name}-${city.name}-${district.name}`
+  ) % descriptionPatterns.length;
+
+const description =
+  descriptionPatterns[descriptionIndex];
+
+const title =
+  `Sedot WC ${district.name}, ${city.name}, ${province.name}`;
+
+/* =========================
+   INTERNAL LINK
+========================= */
+
+/*
+ * Kecamatan lain dalam kota/kabupaten yang sama.
+ * Tidak random sehingga hasilnya stabil.
+ */
+
+const relatedDistricts = districts
+  .filter(
+    (item) =>
+      item.slug !== district.slug
+  )
+  .slice(0, 8);
+
+/* =========================
+   FAQ
+========================= */
+
+const faqs = [
+  {
+    question:
+      `Apakah tersedia jasa sedot WC di Kecamatan ${district.name}?`,
+    answer:
+      `Halaman ini berisi informasi layanan sedot WC untuk wilayah Kecamatan ${district.name}, ${city.name}, ${province.name}, termasuk kelurahan dan desa yang berada di wilayah tersebut.`,
+  },
+  {
+    question:
+      `Wilayah mana saja yang termasuk area ${district.name}?`,
+    answer:
+      postalCodes.length > 0
+        ? `Wilayah yang tercatat di Kecamatan ${district.name} antara lain ${areaSummary}${postalCodes.length > 6 ? ", dan wilayah lainnya" : ""}.`
+        : `Area layanan mencakup wilayah Kecamatan ${district.name} dan area sekitarnya di ${city.name}, ${province.name}.`,
+  },
+  {
+    question:
+      "Masalah apa saja yang dapat ditangani?",
+    answer:
+      "Layanan sedot WC umumnya digunakan untuk membantu mengatasi septic tank penuh, WC mampet, dan kebutuhan penyedotan limbah rumah tangga. Jenis layanan dapat disesuaikan dengan kondisi di lokasi.",
+  },
+  {
+    question:
+      `Apakah melayani kelurahan dan desa di ${district.name}?`,
+    answer:
+      `Informasi wilayah kelurahan dan desa di Kecamatan ${district.name} ditampilkan pada halaman ini berdasarkan data wilayah yang tersedia.`,
+  },
+];
 
 ---
 
 <MainLayout
   title={title}
   description={description}
-  canonical={Astro.url.href}
+  canonical={`${Astro.site ?? Astro.url.origin}/sedot-wc/${province.slug}/${city.slug}/${district.slug}/`}
 >
 
   <main class="kode-pos-page">
     <div class="kode-pos-container">
 
-      <!-- Breadcrumb -->
+      <!-- =========================
+           BREADCRUMB
+      ========================== -->
 
       <nav
         class="breadcrumb"
@@ -114,11 +214,29 @@ const location =
 
         <span>/</span>
 
+        <a
+          href={`/sedot-wc/${province.slug}/`}
+        >
+          {province.name}
+        </a>
+
+        <span>/</span>
+
+        <a
+          href={`/sedot-wc/${province.slug}/${city.slug}/`}
+        >
+          {city.name}
+        </a>
+
+        <span>/</span>
+
         <span>{district.name}</span>
       </nav>
 
 
-      <!-- HERO -->
+      <!-- =========================
+           HERO
+      ========================== -->
 
       <header class="page-heading">
 
@@ -137,30 +255,39 @@ const location =
       </header>
 
 
-      <!-- INTRO -->
+      <!-- =========================
+           INTRO SEO LOKAL
+      ========================== -->
 
       <section class="content-section">
 
         <div class="empty-state">
 
           <h2>
-            Jasa Sedot WC Profesional
+            Jasa Sedot WC di Kecamatan {district.name}
           </h2>
 
           <p>
-            Area layanan {location}, dan sekitarnya.
+            Membutuhkan layanan sedot WC di
+            Kecamatan {district.name},
+            {city.name}, {province.name}?
+            Halaman ini menyediakan informasi
+            wilayah layanan sedot WC berdasarkan
+            area kecamatan serta kelurahan dan desa
+            di sekitarnya.
           </p>
 
           <p>
-            Kami siap membantu Anda mengatasi
-            masalah WC mampet, septic tank penuh,
-            dan berbagai kebutuhan penyedotan limbah.
+            Layanan sedot WC dapat membantu menangani
+            septic tank penuh, WC mampet, saluran
+            pembuangan bermasalah, serta kebutuhan
+            penyedotan limbah rumah tangga.
           </p>
 
           <p>
-            Selain itu, layanan juga dapat mencakup
-            penyedotan limbah lemak restoran serta
-            kebutuhan penyedotan limbah lainnya.
+            Area yang tercatat di wilayah ini antara lain
+            {areaSummary}
+            {postalCodes.length > 6 ? ", dan wilayah lainnya." : "."}
           </p>
 
           <p>
@@ -177,22 +304,89 @@ const location =
       </section>
 
 
-      <!-- LAYANAN -->
+      <!-- =========================
+           LAYANAN
+      ========================== -->
 
       <section class="content-section">
 
         <div class="section-heading">
 
           <div>
+            <span class="eyebrow">
+              Layanan
+            </span>
 
+            <h2>
+              Jasa Sedot WC {district.name}
+            </h2>
+          </div>
+
+        </div>
+
+        <div class="list-grid">
+
+          <div class="list-card">
+            <span>
+              <strong>Sedot Septic Tank</strong>
+              <small>
+                Membantu mengatasi septic tank
+                penuh dan perlu dikuras.
+              </small>
+            </span>
+          </div>
+
+          <div class="list-card">
+            <span>
+              <strong>WC Mampet</strong>
+              <small>
+                Penanganan kebutuhan penyedotan
+                akibat WC atau saluran tersumbat.
+              </small>
+            </span>
+          </div>
+
+          <div class="list-card">
+            <span>
+              <strong>Penyedotan Limbah</strong>
+              <small>
+                Layanan penyedotan limbah sesuai
+                kebutuhan lokasi.
+              </small>
+            </span>
+          </div>
+
+          <div class="list-card">
+            <span>
+              <strong>Limbah Rumah Tangga</strong>
+              <small>
+                Membantu kebutuhan pengelolaan
+                limbah rumah tangga.
+              </small>
+            </span>
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- =========================
+           KELURAHAN / DESA
+      ========================== -->
+
+      <section class="content-section">
+
+        <div class="section-heading">
+
+          <div>
             <span class="eyebrow">
               Area Layanan
             </span>
 
             <h2>
-              Layanan Sedot WC Terkait
+              Kelurahan dan Desa di Kecamatan {district.name}
             </h2>
-
           </div>
 
           <span class="count">
@@ -200,7 +394,6 @@ const location =
           </span>
 
         </div>
-
 
         {
           postalCodes.length > 0 ? (
@@ -215,14 +408,19 @@ const location =
                     <span>
 
                       <strong>
-                        Sedot WC {item.name}
+                        {item.name}
                       </strong>
 
                       <small>
-                        {item.name}, {district.name},{" "}
-                        {city.name}, {province.name}
+                        Sedot WC {item.name},
+                        {district.name},
+                        {city.name}
                       </small>
 
+                    </span>
+
+                    <span class="arrow">
+                      →
                     </span>
 
                   </div>
@@ -235,7 +433,7 @@ const location =
           ) : (
 
             <div class="empty-state">
-              Data wilayah layanan belum tersedia.
+              Data kelurahan dan desa belum tersedia.
             </div>
 
           )
@@ -244,25 +442,182 @@ const location =
       </section>
 
 
-      <!-- INFO LOKASI -->
+      <!-- =========================
+           INFORMASI WILAYAH
+      ========================== -->
 
       <section class="content-section">
 
         <div class="page-heading">
 
           <span class="eyebrow">
-            Area Layanan
+            Informasi Wilayah
           </span>
 
           <h2>
-            Sedot WC {district.name}
+            Sedot WC {district.name}, {city.name}
           </h2>
 
           <p>
-            Melayani kebutuhan sedot WC di
-            Kecamatan {district.name},
-            Kabupaten/Kota {city.name},
-            {province.name} dan wilayah sekitarnya.
+            Kecamatan {district.name} merupakan bagian
+            dari {city.name}, {province.name}.
+            Informasi area pada halaman ini mencakup
+            kelurahan dan desa yang berada di dalam
+            wilayah kecamatan tersebut.
+          </p>
+
+          <p>
+            Dengan mengetahui wilayah kelurahan atau desa,
+            pencarian layanan sedot WC dapat dilakukan
+            berdasarkan lokasi yang lebih spesifik.
+          </p>
+
+        </div>
+
+      </section>
+
+
+      <!-- =========================
+           KECAMATAN TERKAIT
+      ========================== -->
+
+      {
+        relatedDistricts.length > 0 && (
+
+          <section class="content-section">
+
+            <div class="section-heading">
+
+              <div>
+                <span class="eyebrow">
+                  Wilayah Sekitar
+                </span>
+
+                <h2>
+                  Sedot WC di Kecamatan Lain
+                </h2>
+              </div>
+
+            </div>
+
+            <div class="list-grid">
+
+              {
+                relatedDistricts.map((item) => (
+
+                  <a
+                    class="list-card"
+                    href={`/sedot-wc/${province.slug}/${city.slug}/${item.slug}/`}
+                  >
+
+                    <span>
+
+                      <strong>
+                        Sedot WC {item.name}
+                      </strong>
+
+                      <small>
+                        {item.name},
+                        {city.name},
+                        {province.name}
+                      </small>
+
+                    </span>
+
+                    <span class="arrow">
+                      →
+                    </span>
+
+                  </a>
+
+                ))
+              }
+
+            </div>
+
+          </section>
+
+        )
+      }
+
+
+      <!-- =========================
+           FAQ
+      ========================== -->
+
+      <section
+        class="content-section"
+        aria-labelledby="faq-heading"
+      >
+
+        <div class="section-heading">
+
+          <div>
+            <span class="eyebrow">
+              FAQ
+            </span>
+
+            <h2 id="faq-heading">
+              Pertanyaan Umum
+            </h2>
+          </div>
+
+        </div>
+
+        <div class="list-grid">
+
+          {
+            faqs.map((faq) => (
+
+              <article class="list-card">
+
+                <span>
+
+                  <strong>
+                    {faq.question}
+                  </strong>
+
+                  <small>
+                    {faq.answer}
+                  </small>
+
+                </span>
+
+              </article>
+
+            ))
+          }
+
+        </div>
+
+      </section>
+
+
+      <!-- =========================
+           CTA
+      ========================== -->
+
+      <section class="content-section">
+
+        <div class="empty-state">
+
+          <h2>
+            Butuh Jasa Sedot WC di {district.name}?
+          </h2>
+
+          <p>
+            Hubungi penyedia jasa untuk menanyakan
+            ketersediaan layanan dan area pengerjaan
+            di {district.name}, {city.name}.
+          </p>
+
+          <p>
+            <a
+              href="/kontak/"
+              class="hero-link"
+            >
+              HUBUNGI KAMI →
+            </a>
           </p>
 
         </div>
