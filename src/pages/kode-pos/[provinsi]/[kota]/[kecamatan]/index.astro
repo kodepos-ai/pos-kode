@@ -27,8 +27,39 @@ const district = districts.find((item) => item.slug === kecamatan);
 if (!district) return new Response("Kecamatan tidak ditemukan", { status: 404 });
 
 const postalCodes = await getPostalCodes(Astro.locals, district.dis_id);
+
+
 const title = `Kode Pos ${district.name}, ${city.name}, ${province.name}`;
-const description = `Daftar kode pos ${district.name}, ${city.name}, ${province.name}, lengkap dengan kelurahan dan desa.`;
+
+const descriptions = [
+  `Daftar kode pos ${district.name}, ${city.name}, ${province.name} lengkap berdasarkan kelurahan dan desa. Temukan kode pos setiap wilayah dengan mudah.`,
+
+  `Temukan kode pos ${district.name}, ${city.name}, ${province.name} berdasarkan kelurahan dan desa yang tersedia lengkap dalam satu halaman.`,
+
+  `Informasi kode pos ${district.name}, ${city.name}, ${province.name} mencakup daftar kelurahan dan desa beserta kode pos masing-masing wilayah.`,
+
+  `Cari kode pos wilayah ${district.name}, ${city.name}, ${province.name} dengan melihat daftar kelurahan dan desa beserta kode posnya.`,
+
+  `Daftar kelurahan, desa, dan kode pos ${district.name}, ${city.name}, ${province.name} untuk membantu menemukan kode pos wilayah dengan cepat.`,
+
+  `Lihat daftar kode pos ${district.name}, ${city.name}, ${province.name} lengkap dengan nama kelurahan dan desa di setiap wilayah.`,
+
+  `Panduan kode pos ${district.name}, ${city.name}, ${province.name} berisi daftar kelurahan dan desa beserta informasi kode pos yang tersedia.`,
+
+  `Cari informasi kode pos di ${district.name}, ${city.name}, ${province.name} mulai dari kelurahan hingga desa dalam daftar yang mudah digunakan.`,
+
+  `Daftar kode pos wilayah ${district.name}, ${city.name}, ${province.name} mencakup kelurahan dan desa untuk memudahkan pencarian kode pos.`,
+
+  `Temukan informasi kode pos ${district.name}, ${city.name}, ${province.name} secara praktis melalui daftar kelurahan dan desa beserta kode posnya.`
+];
+
+const descriptionIndex =
+  [...district.name].reduce(
+    (total, char) => total + char.charCodeAt(0),
+    0
+  ) % descriptions.length;
+
+const description = descriptions[descriptionIndex];
 ---
 <MainLayout title={title} description={description} canonical={Astro.url.href}>
   <main class="kode-pos-page">
