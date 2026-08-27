@@ -1,0 +1,302 @@
+---
+import MainLayout from "../../layouts/MainLayout.astro";
+import "../../styles/kode-pos.css";
+
+const title = "Kontak | KodePos";
+
+const description =
+  "Hubungi kami untuk informasi jasa sedot WC dan layanan penyedotan limbah di wilayah Anda.";
+
+const whatsappNumber = "6281234567890";
+---
+
+<MainLayout
+  title={title}
+  description={description}
+  canonical={`${Astro.site ?? Astro.url.origin}/kontak/`}
+>
+
+  <main class="kode-pos-page">
+    <div class="kode-pos-container">
+
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Beranda</a>
+        <span>/</span>
+        <span>Kontak</span>
+      </nav>
+
+      <header class="page-heading">
+        <span class="eyebrow">Hubungi Kami</span>
+
+        <h1>Kontak</h1>
+
+        <p>
+          Isi formulir di bawah ini. Setelah dikirim,
+          pesan akan diteruskan ke WhatsApp untuk
+          memudahkan komunikasi.
+        </p>
+      </header>
+
+      <section class="content-section">
+
+        <div class="contact-card">
+
+          <form id="contact-form">
+
+            <div class="form-group">
+              <label for="nama">
+                Nama
+              </label>
+
+              <input
+                id="nama"
+                name="nama"
+                type="text"
+                placeholder="Nama Anda"
+                autocomplete="name"
+                required
+              />
+            </div>
+
+
+            <div class="form-group">
+              <label for="telepon">
+                Nomor WhatsApp
+              </label>
+
+              <input
+                id="telepon"
+                name="telepon"
+                type="tel"
+                placeholder="08xxxxxxxxxx"
+                autocomplete="tel"
+                required
+              />
+            </div>
+
+
+            <div class="form-group">
+              <label for="lokasi">
+                Lokasi
+              </label>
+
+              <input
+                id="lokasi"
+                name="lokasi"
+                type="text"
+                placeholder="Contoh: Kecamatan Kuningan"
+                autocomplete="address-level2"
+                required
+              />
+            </div>
+
+
+            <div class="form-group">
+              <label for="layanan">
+                Kebutuhan
+              </label>
+
+              <select
+                id="layanan"
+                name="layanan"
+                required
+              >
+                <option value="">
+                  Pilih kebutuhan
+                </option>
+
+                <option value="Sedot WC">
+                  Sedot WC
+                </option>
+
+                <option value="Septic tank penuh">
+                  Septic tank penuh
+                </option>
+
+                <option value="WC mampet">
+                  WC mampet
+                </option>
+
+                <option value="Penyedotan limbah">
+                  Penyedotan limbah
+                </option>
+
+                <option value="Lainnya">
+                  Lainnya
+                </option>
+              </select>
+            </div>
+
+
+            <div class="form-group">
+              <label for="pesan">
+                Pesan
+              </label>
+
+              <textarea
+                id="pesan"
+                name="pesan"
+                rows="5"
+                placeholder="Jelaskan kebutuhan Anda..."
+                required
+              ></textarea>
+            </div>
+
+
+            <button
+              type="submit"
+              class="hero-link contact-submit"
+            >
+              KIRIM KE WHATSAPP →
+            </button>
+
+          </form>
+
+        </div>
+
+      </section>
+
+    </div>
+  </main>
+
+</MainLayout>
+
+
+<style>
+  .contact-card {
+    max-width: 700px;
+    padding: 26px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+
+  .form-group {
+    margin-bottom: 18px;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 14px;
+    font-weight: 650;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--text);
+    font: inherit;
+    outline: none;
+  }
+
+  .form-group input,
+  .form-group select {
+    height: 46px;
+  }
+
+  .form-group textarea {
+    resize: vertical;
+    min-height: 120px;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  .contact-submit {
+    border: 0;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+
+  @media (max-width: 600px) {
+    .contact-card {
+      padding: 20px;
+    }
+
+    .contact-submit {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>
+
+
+<script>
+  const form =
+    document.querySelector<HTMLFormElement>("#contact-form");
+
+  const whatsappNumber =
+    "6281234567890";
+
+  form?.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const nama =
+      (
+        document.querySelector<HTMLInputElement>(
+          "#nama"
+        )?.value || ""
+      ).trim();
+
+    const telepon =
+      (
+        document.querySelector<HTMLInputElement>(
+          "#telepon"
+        )?.value || ""
+      ).trim();
+
+    const lokasi =
+      (
+        document.querySelector<HTMLInputElement>(
+          "#lokasi"
+        )?.value || ""
+      ).trim();
+
+    const layanan =
+      (
+        document.querySelector<HTMLSelectElement>(
+          "#layanan"
+        )?.value || ""
+      ).trim();
+
+    const pesan =
+      (
+        document.querySelector<HTMLTextAreaElement>(
+          "#pesan"
+        )?.value || ""
+      ).trim();
+
+
+    const message = [
+      "Halo, saya ingin mendapatkan informasi jasa.",
+      "",
+      `Nama: ${nama}`,
+      `WhatsApp: ${telepon}`,
+      `Lokasi: ${lokasi}`,
+      `Kebutuhan: ${layanan}`,
+      "",
+      `Pesan: ${pesan}`,
+    ].join("\n");
+
+
+    const whatsappUrl =
+      `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+
+    window.open(
+      whatsappUrl,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  });
+</script>
